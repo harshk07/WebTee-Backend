@@ -3,22 +3,69 @@ import json
 from datetime import datetime, date
 import secrets
 
+# def post_userLogin(data):
+#     from config.db import user, nft
+    
+#     data = dict(data)
+    
+#     allowed_wallet_types = ["metamask", "coinbase", "trust wallet", "wallet connect"]
+#     if data["walletType"].lower() in allowed_wallet_types:
+#         user.insert_one(data)
+        
+#         user.update_one({"_id": data["_id"]}, {"$set": {
+#             "createdAt": datetime.now(),
+#             "nftProcessed": False,
+#             "dmActive": False,
+#             "nftCollection": [],
+#             "refferaID": secrets.token_hex(6)
+#         }})
+        
+#         nft_data = {
+#             "userID": str(data["_id"]),
+#             "walletAddress": data["walletAddress"],
+#             "nftMetaData": "",
+#             "rightAllocated": {
+#                 "tshirt": None,
+#                 "cap": None,
+#                 "hoodie": None,
+#                 "cup": None
+#             },
+#             "lastSyncedOn": None,
+#             "isOwned": True,
+#             "isAdminVerified": False
+#         }
+#         nft.insert_one(nft_data)
+        
+#         message = "Login Created Successfully"
+#         user_id = str(data["_id"])
+#         response = {"message": message, "walletId": user_id}
+#         return response
+#     else:
+#         return "Invalid Wallet Type"
+
 def post_userLogin(data):
     from config.db import user, nft
     
     data = dict(data)
     
+    # Check if a user with the same wallet address already exists
+    existing_user = user.find_one({"walletAddress": data["walletAddress"]})
+    
+    if existing_user:
+        return "User already exists"
+    
     allowed_wallet_types = ["metamask", "coinbase", "trust wallet", "wallet connect"]
     if data["walletType"].lower() in allowed_wallet_types:
-        user.insert_one(data)
-        
-        user.update_one({"_id": data["_id"]}, {"$set": {
+        # Insert a new user only if the user doesn't exist
+        new_user = {
             "createdAt": datetime.now(),
             "nftProcessed": False,
             "dmActive": False,
             "nftCollection": [],
             "refferaID": secrets.token_hex(6)
-        }})
+        }
+        data.update(new_user)
+        user.insert_one(data)
         
         nft_data = {
             "userID": str(data["_id"]),
